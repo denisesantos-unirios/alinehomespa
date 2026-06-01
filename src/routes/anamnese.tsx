@@ -8,6 +8,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Progress } from "@/components/ui/progress";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { toast } from "sonner";
 import { ChevronLeft, ChevronRight, Save, ShieldCheck } from "lucide-react";
 
@@ -189,7 +196,14 @@ function StepIdentificacao({ data, set }: any) {
         <Input id="idade" value={idade} readOnly className="bg-muted" />
       </Field>
       <Field label="Sexo" htmlFor="sexo">
-        <Input id="sexo" value={data.sexo ?? ""} onChange={(e) => set("sexo", e.target.value)} placeholder="Feminino / Masculino / Outro" />
+        <Select value={data.sexo ?? ""} onValueChange={(v) => set("sexo", v)}>
+          <SelectTrigger id="sexo"><SelectValue placeholder="Selecione" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="Feminino">Feminino</SelectItem>
+            <SelectItem value="Masculino">Masculino</SelectItem>
+            <SelectItem value="Outro">Outro</SelectItem>
+          </SelectContent>
+        </Select>
       </Field>
       <Field label="CPF *" htmlFor="cpf">
         <Input id="cpf" inputMode="numeric" value={data.cpf ?? ""} onChange={(e) => set("cpf", maskCPF(e.target.value))} placeholder="000.000.000-00" />
@@ -213,7 +227,16 @@ function StepIdentificacao({ data, set }: any) {
         <Input id="profissao" value={data.profissao ?? ""} onChange={(e) => set("profissao", e.target.value)} />
       </Field>
       <Field label="Estado civil" htmlFor="estadoCivil">
-        <Input id="estadoCivil" value={data.estadoCivil ?? ""} onChange={(e) => set("estadoCivil", e.target.value)} />
+        <Select value={data.estadoCivil ?? ""} onValueChange={(v) => set("estadoCivil", v)}>
+          <SelectTrigger id="estadoCivil"><SelectValue placeholder="Selecione" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="Solteiro(a)">Solteiro(a)</SelectItem>
+            <SelectItem value="Casado(a)">Casado(a)</SelectItem>
+            <SelectItem value="Divorciado(a)">Divorciado(a)</SelectItem>
+            <SelectItem value="Viúvo(a)">Viúvo(a)</SelectItem>
+            <SelectItem value="União estável">União estável</SelectItem>
+          </SelectContent>
+        </Select>
       </Field>
       <Field label="Contato de emergência" htmlFor="emerg">
         <Input id="emerg" value={data.emerg ?? ""} onChange={(e) => set("emerg", e.target.value)} />
