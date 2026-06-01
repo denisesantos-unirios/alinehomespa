@@ -9,7 +9,7 @@ const nav = [
   { to: "/servicos", label: "Serviços" },
   { to: "/sobre", label: "Sobre" },
   { to: "/contato", label: "Contato" },
-  { to: "/anamnese", label: "Área do Cliente" },
+  { to: "/anamnese", label: "Ficha de Anamnese" },
 ] as const;
 
 export function SiteHeader() {
