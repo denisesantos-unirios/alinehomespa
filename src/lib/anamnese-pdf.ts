@@ -10,7 +10,7 @@ type Client = {
   email: string | null;
   cpf: string | null;
   birth_date: string | null;
-  anamnesis: Record<string, any> | null;
+  anamnesis: any;
   therapist_notes: string | null;
   fitness_status: string;
   created_at: string;
