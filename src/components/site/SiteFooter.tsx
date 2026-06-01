@@ -23,7 +23,7 @@ export function SiteFooter() {
               { to: "/servicos", label: "Serviços" },
               { to: "/sobre", label: "Sobre" },
               { to: "/contato", label: "Contato" },
-              { to: "/anamnese", label: "Área do Cliente" },
+              { to: "/anamnese", label: "Ficha de Anamnese" },
             ].map((l) => (
               <li key={l.to}>
                 <Link to={l.to} className="text-primary-foreground/80 hover:text-gold">
