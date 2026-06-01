@@ -84,7 +84,7 @@ function AdminLayout() {
             return (
               <Link
                 key={it.to}
-                to={it.to}
+                to={it.to as never}
                 className={cn(
                   "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition",
                   active
