@@ -10,12 +10,12 @@ export const Route = createFileRoute("/admin")({
   component: AdminLayout,
 });
 
-const items = [
+const items: { to: string; label: string; icon: typeof LayoutDashboard; exact?: boolean }[] = [
   { to: "/admin", label: "Dashboard", icon: LayoutDashboard, exact: true },
   { to: "/admin/clientes", label: "Clientes", icon: Users },
   { to: "/admin/agenda", label: "Agenda", icon: CalendarDays },
   { to: "/admin/configuracoes", label: "Configurações", icon: Settings },
-] as const;
+];
 
 function AdminLayout() {
   const [authed, setAuthed] = useState(false);
