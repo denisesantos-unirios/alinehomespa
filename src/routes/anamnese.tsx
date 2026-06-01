@@ -227,7 +227,16 @@ function StepIdentificacao({ data, set }: any) {
         <Input id="profissao" value={data.profissao ?? ""} onChange={(e) => set("profissao", e.target.value)} />
       </Field>
       <Field label="Estado civil" htmlFor="estadoCivil">
-        <Input id="estadoCivil" value={data.estadoCivil ?? ""} onChange={(e) => set("estadoCivil", e.target.value)} />
+        <Select value={data.estadoCivil ?? ""} onValueChange={(v) => set("estadoCivil", v)}>
+          <SelectTrigger id="estadoCivil"><SelectValue placeholder="Selecione" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="Solteiro(a)">Solteiro(a)</SelectItem>
+            <SelectItem value="Casado(a)">Casado(a)</SelectItem>
+            <SelectItem value="Divorciado(a)">Divorciado(a)</SelectItem>
+            <SelectItem value="Viúvo(a)">Viúvo(a)</SelectItem>
+            <SelectItem value="União estável">União estável</SelectItem>
+          </SelectContent>
+        </Select>
       </Field>
       <Field label="Contato de emergência" htmlFor="emerg">
         <Input id="emerg" value={data.emerg ?? ""} onChange={(e) => set("emerg", e.target.value)} />
