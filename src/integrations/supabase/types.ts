@@ -14,16 +14,142 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      appointments: {
+        Row: {
+          client_id: string | null
+          client_name: string
+          created_at: string
+          id: string
+          location: string | null
+          notes: string | null
+          scheduled_at: string
+          service_type: string
+          status: Database["public"]["Enums"]["appointment_status"]
+          updated_at: string
+        }
+        Insert: {
+          client_id?: string | null
+          client_name: string
+          created_at?: string
+          id?: string
+          location?: string | null
+          notes?: string | null
+          scheduled_at: string
+          service_type: string
+          status?: Database["public"]["Enums"]["appointment_status"]
+          updated_at?: string
+        }
+        Update: {
+          client_id?: string | null
+          client_name?: string
+          created_at?: string
+          id?: string
+          location?: string | null
+          notes?: string | null
+          scheduled_at?: string
+          service_type?: string
+          status?: Database["public"]["Enums"]["appointment_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "appointments_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      clients: {
+        Row: {
+          anamnesis: Json
+          anamnesis_complete: boolean
+          birth_date: string | null
+          cpf: string | null
+          created_at: string
+          email: string | null
+          fitness_status: Database["public"]["Enums"]["fitness_status"]
+          full_name: string
+          id: string
+          last_session_at: string | null
+          phone: string | null
+          therapist_notes: string | null
+          updated_at: string
+          whatsapp: string | null
+        }
+        Insert: {
+          anamnesis?: Json
+          anamnesis_complete?: boolean
+          birth_date?: string | null
+          cpf?: string | null
+          created_at?: string
+          email?: string | null
+          fitness_status?: Database["public"]["Enums"]["fitness_status"]
+          full_name: string
+          id?: string
+          last_session_at?: string | null
+          phone?: string | null
+          therapist_notes?: string | null
+          updated_at?: string
+          whatsapp?: string | null
+        }
+        Update: {
+          anamnesis?: Json
+          anamnesis_complete?: boolean
+          birth_date?: string | null
+          cpf?: string | null
+          created_at?: string
+          email?: string | null
+          fitness_status?: Database["public"]["Enums"]["fitness_status"]
+          full_name?: string
+          id?: string
+          last_session_at?: string | null
+          phone?: string | null
+          therapist_notes?: string | null
+          updated_at?: string
+          whatsapp?: string | null
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "user"
+      appointment_status: "agendado" | "concluido" | "cancelado"
+      fitness_status: "pendente" | "apto" | "requer_avaliacao"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +276,10 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "user"],
+      appointment_status: ["agendado", "concluido", "cancelado"],
+      fitness_status: ["pendente", "apto", "requer_avaliacao"],
+    },
   },
 } as const
