@@ -196,7 +196,14 @@ function StepIdentificacao({ data, set }: any) {
         <Input id="idade" value={idade} readOnly className="bg-muted" />
       </Field>
       <Field label="Sexo" htmlFor="sexo">
-        <Input id="sexo" value={data.sexo ?? ""} onChange={(e) => set("sexo", e.target.value)} placeholder="Feminino / Masculino / Outro" />
+        <Select value={data.sexo ?? ""} onValueChange={(v) => set("sexo", v)}>
+          <SelectTrigger id="sexo"><SelectValue placeholder="Selecione" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="Feminino">Feminino</SelectItem>
+            <SelectItem value="Masculino">Masculino</SelectItem>
+            <SelectItem value="Outro">Outro</SelectItem>
+          </SelectContent>
+        </Select>
       </Field>
       <Field label="CPF *" htmlFor="cpf">
         <Input id="cpf" inputMode="numeric" value={data.cpf ?? ""} onChange={(e) => set("cpf", maskCPF(e.target.value))} placeholder="000.000.000-00" />
