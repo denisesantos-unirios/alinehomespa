@@ -23,7 +23,7 @@ export function SiteFooter() {
               { to: "/servicos", label: "Serviços" },
               { to: "/sobre", label: "Sobre" },
               { to: "/contato", label: "Contato" },
-              { to: "/anamnese", label: "Área do Cliente" },
+              { to: "/anamnese", label: "Ficha de Anamnese" },
             ].map((l) => (
               <li key={l.to}>
                 <Link to={l.to} className="text-primary-foreground/80 hover:text-gold">
@@ -39,13 +39,26 @@ export function SiteFooter() {
           </h4>
           <ul className="mt-4 space-y-3 text-sm text-primary-foreground/85">
             <li className="flex items-center gap-2">
-              <Phone className="h-4 w-4 text-gold" /> (00) 00000-0000
+              <span className="font-medium text-primary-foreground">Aline Souza</span>
             </li>
             <li className="flex items-center gap-2">
-              <MessageCircle className="h-4 w-4 text-gold" /> WhatsApp
+              <Phone className="h-4 w-4 text-gold" />
+              <a href="tel:+5575988862513" className="hover:text-gold">+55 75 8886-2513</a>
             </li>
             <li className="flex items-center gap-2">
-              <Mail className="h-4 w-4 text-gold" /> contato@alinehomespaprime.com
+              <MessageCircle className="h-4 w-4 text-gold" />
+              <a
+                href="https://wa.me/5575988862513"
+                target="_blank"
+                rel="noreferrer"
+                className="hover:text-gold"
+              >
+                WhatsApp
+              </a>
+            </li>
+            <li className="flex items-center gap-2">
+              <Mail className="h-4 w-4 text-gold" />
+              <span>contato@alinehomespaprime.com</span>
             </li>
             <li>
               <a
@@ -58,6 +71,7 @@ export function SiteFooter() {
               </a>
             </li>
           </ul>
+
         </div>
       </div>
       <div className="border-t border-primary-foreground/10">
