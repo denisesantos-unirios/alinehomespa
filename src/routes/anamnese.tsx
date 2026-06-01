@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import { ChevronLeft, ChevronRight, Save, ShieldCheck } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/anamnese")({
   head: () => ({
@@ -107,10 +108,21 @@ function AnamnesePage() {
       toast.error("Não foi possível salvar o rascunho.");
     }
   }
-  function submit() {
+  async function submit() {
     if (!data.aceitaTermo || !data.assinatura?.trim()) {
       return toast.error("Confirme o termo e informe sua assinatura.");
     }
+    const { error } = await supabase.from("clients").insert({
+      full_name: String(data.nome ?? "").trim(),
+      phone: data.telefone ?? null,
+      whatsapp: data.whatsapp ?? null,
+      email: data.email ?? null,
+      cpf: data.cpf ?? null,
+      birth_date: data.nascimento ?? null,
+      anamnesis: data,
+      anamnesis_complete: true,
+    });
+    if (error) return toast.error("Não foi possível enviar a ficha. Tente novamente.");
     toast.success("Ficha enviada! A terapeuta entrará em contato em breve.");
     localStorage.removeItem("anamnese-draft");
     setData({ objetivos: [], saude: {} });
