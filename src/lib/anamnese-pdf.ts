@@ -42,6 +42,8 @@ function computeAge(nascimento?: string | null): string {
   const md = t.getMonth() - birth.getMonth();
   if (md < 0 || (md === 0 && t.getDate() < birth.getDate())) age--;
   return age >= 0 && age < 130 ? `${age} anos` : "";
+}
+
 
 export function exportAnamnesisPDF(client: Client) {
   const a = client.anamnesis ?? {};
