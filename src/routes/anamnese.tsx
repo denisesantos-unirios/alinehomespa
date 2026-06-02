@@ -52,9 +52,6 @@ function maskPhone(v: string) {
   if (d.length <= 10) return d.replace(/(\d{0,2})(\d{0,4})(\d{0,4}).*/, (_, a, b, c) => [a && `(${a}`, a && a.length === 2 ? ") " : "", b, c && `-${c}`].filter(Boolean).join(""));
   return d.replace(/(\d{2})(\d{5})(\d{0,4}).*/, "($1) $2-$3");
 }
-function maskCPF(v: string) {
-  return v.replace(/\D/g, "").slice(0, 11).replace(/(\d{3})(\d{3})(\d{3})(\d{0,2})/, (_, a, b, c, d) => [a, b && `.${b}`, c && `.${c}`, d && `-${d}`].filter(Boolean).join(""));
-}
 function maskDate(v: string) {
   const d = v.replace(/\D/g, "").slice(0, 8);
   return d.replace(/(\d{2})(\d{2})(\d{0,4})/, (_, a, b, c) => [a, b && `/${b}`, c && `/${c}`].filter(Boolean).join(""));
@@ -89,7 +86,7 @@ function AnamnesePage() {
   function next() {
     // simple required validation per step
     if (step === 0) {
-      const need = ["nome", "nascimento", "cpf", "telefone", "email"];
+      const need = ["nome", "nascimento", "telefone", "email"];
       const miss = need.filter((k) => !String(data[k] ?? "").trim());
       if (miss.length) return toast.error("Preencha todos os campos obrigatórios.");
     }
@@ -117,7 +114,7 @@ function AnamnesePage() {
       phone: data.telefone ?? null,
       whatsapp: data.whatsapp ?? null,
       email: data.email ?? null,
-      cpf: data.cpf ?? null,
+      
       birth_date: data.nascimento ?? null,
       anamnesis: data,
       anamnesis_complete: true,
@@ -216,12 +213,6 @@ function StepIdentificacao({ data, set }: any) {
             <SelectItem value="Outro">Outro</SelectItem>
           </SelectContent>
         </Select>
-      </Field>
-      <Field label="CPF *" htmlFor="cpf">
-        <Input id="cpf" inputMode="numeric" value={data.cpf ?? ""} onChange={(e) => set("cpf", maskCPF(e.target.value))} placeholder="000.000.000-00" />
-      </Field>
-      <Field label="RG" htmlFor="rg">
-        <Input id="rg" value={data.rg ?? ""} onChange={(e) => set("rg", e.target.value)} />
       </Field>
       <Field label="Telefone *" htmlFor="telefone">
         <Input id="telefone" inputMode="tel" value={data.telefone ?? ""} onChange={(e) => set("telefone", maskPhone(e.target.value))} placeholder="(00) 00000-0000" />
