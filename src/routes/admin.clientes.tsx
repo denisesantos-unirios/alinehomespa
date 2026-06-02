@@ -225,8 +225,6 @@ function ViewDialog({ client, onClose }: { client: Client | null; onClose: () =>
             <Row label="Idade" value={a.idade} />
             <Row label="Sexo" value={a.sexo} />
             <Row label="Estado civil" value={a.estadoCivil} />
-            <Row label="CPF" value={client.cpf ?? a.cpf} />
-            <Row label="RG" value={a.rg} />
             <Row label="Telefone" value={client.phone} />
             <Row label="WhatsApp" value={client.whatsapp} />
             <Row label="E-mail" value={client.email} />
