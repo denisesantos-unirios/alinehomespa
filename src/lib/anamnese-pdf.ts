@@ -106,7 +106,7 @@ export function exportAnamnesisPDF(client: Client) {
   table([
     ["Nome completo", val(client.full_name)],
     ["Data de nascimento", val(a.nascimento ?? client.birth_date)],
-    ["Idade", val(a.idade)],
+    ["Idade", val(a.idade) !== "—" ? val(a.idade) : (computeAge(a.nascimento ?? client.birth_date) || "—")],
     ["Sexo", val(a.sexo)],
     ["Telefone", val(client.phone)],
     ["WhatsApp", val(client.whatsapp)],
