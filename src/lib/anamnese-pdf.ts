@@ -8,7 +8,6 @@ type Client = {
   phone: string | null;
   whatsapp: string | null;
   email: string | null;
-  cpf: string | null;
   birth_date: string | null;
   anamnesis: any;
   therapist_notes: string | null;
@@ -94,8 +93,6 @@ export function exportAnamnesisPDF(client: Client) {
     ["Data de nascimento", val(a.nascimento ?? client.birth_date)],
     ["Idade", val(a.idade)],
     ["Sexo", val(a.sexo)],
-    ["CPF", val(client.cpf ?? a.cpf)],
-    ["RG", val(a.rg)],
     ["Telefone", val(client.phone)],
     ["WhatsApp", val(client.whatsapp)],
     ["E-mail", val(client.email)],
