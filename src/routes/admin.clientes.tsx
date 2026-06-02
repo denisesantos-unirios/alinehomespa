@@ -225,8 +225,6 @@ function ViewDialog({ client, onClose }: { client: Client | null; onClose: () =>
             <Row label="Idade" value={a.idade} />
             <Row label="Sexo" value={a.sexo} />
             <Row label="Estado civil" value={a.estadoCivil} />
-            <Row label="CPF" value={client.cpf ?? a.cpf} />
-            <Row label="RG" value={a.rg} />
             <Row label="Telefone" value={client.phone} />
             <Row label="WhatsApp" value={client.whatsapp} />
             <Row label="E-mail" value={client.email} />
@@ -297,33 +295,61 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 function EditDialog({
   client, onClose, onSaved,
 }: { client: Client | null; onClose: () => void; onSaved: () => void }) {
-  const [notes, setNotes] = useState("");
-  const [status, setStatus] = useState<Client["fitness_status"]>("pendente");
-  const [lastSession, setLastSession] = useState("");
+  const [form, setForm] = useState<any>(null);
   const [busy, setBusy] = useState(false);
 
   useMemo(() => {
     if (client) {
-      setNotes(client.therapist_notes ?? "");
-      setStatus(client.fitness_status);
-      setLastSession(
-        client.last_session_at
+      const a = (client.anamnesis ?? {}) as any;
+      setForm({
+        full_name: client.full_name ?? "",
+        phone: client.phone ?? "",
+        whatsapp: client.whatsapp ?? "",
+        email: client.email ?? "",
+        birth_date: client.birth_date ?? "",
+        therapist_notes: client.therapist_notes ?? "",
+        fitness_status: client.fitness_status,
+        last_session: client.last_session_at
           ? format(new Date(client.last_session_at), "yyyy-MM-dd")
           : "",
-      );
+        sexo: a.sexo ?? "",
+        estadoCivil: a.estadoCivil ?? "",
+        profissao: a.profissao ?? "",
+        endereco: a.endereco ?? "",
+        emerg: a.emerg ?? "",
+        emergTel: a.emergTel ?? "",
+        queixa: a.queixa ?? "",
+        saudeExp: a.saudeExp ?? "",
+        medQuais: a.medQuais ?? "",
+        cirurgiaQuais: a.cirurgiaQuais ?? "",
+      });
     }
   }, [client]);
 
-  if (!client) return null;
+  if (!client || !form) return null;
+  const upd = (k: string, v: any) => setForm((f: any) => ({ ...f, [k]: v }));
 
   async function save() {
     setBusy(true);
+    const a = { ...((client!.anamnesis ?? {}) as any) };
+    [
+      "sexo", "estadoCivil", "profissao", "endereco", "emerg", "emergTel",
+      "queixa", "saudeExp", "medQuais", "cirurgiaQuais",
+    ].forEach((k) => { a[k] = form[k] || ""; });
+    a.nascimento = form.birth_date || a.nascimento;
+
     const { error } = await supabase
       .from("clients")
       .update({
-        therapist_notes: notes,
-        fitness_status: status,
-        last_session_at: lastSession ? new Date(lastSession).toISOString() : null,
+        full_name: form.full_name,
+        phone: form.phone || null,
+        whatsapp: form.whatsapp || null,
+        email: form.email || null,
+        birth_date: form.birth_date || null,
+        therapist_notes: form.therapist_notes,
+        fitness_status: form.fitness_status,
+        last_session_at: form.last_session ? new Date(form.last_session).toISOString() : null,
+        anamnesis: a,
       })
       .eq("id", client!.id);
     setBusy(false);
@@ -334,31 +360,88 @@ function EditDialog({
 
   return (
     <Dialog open={!!client} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle>Editar ficha — {client.full_name}</DialogTitle>
-          <DialogDescription>Observações e avaliação clínica.</DialogDescription>
+          <DialogDescription>Atualize dados pessoais, anamnese e avaliação clínica.</DialogDescription>
         </DialogHeader>
-        <div className="space-y-4">
-          <div>
-            <Label>Status</Label>
-            <Select value={status} onValueChange={(v) => setStatus(v as Client["fitness_status"])}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="pendente">Pendente</SelectItem>
-                <SelectItem value="apto">Apto para atendimento</SelectItem>
-                <SelectItem value="requer_avaliacao">Requer avaliação médica</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div>
-            <Label>Última sessão</Label>
-            <Input type="date" value={lastSession} onChange={(e) => setLastSession(e.target.value)} />
-          </div>
-          <div>
-            <Label>Observações do terapeuta</Label>
-            <Textarea rows={5} value={notes} onChange={(e) => setNotes(e.target.value)} />
-          </div>
+        <div className="space-y-5">
+          <section className="space-y-3">
+            <h4 className="font-display text-sm uppercase tracking-widest text-gold">Identificação</h4>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="sm:col-span-2"><Label>Nome completo</Label>
+                <Input value={form.full_name} onChange={(e) => upd("full_name", e.target.value)} /></div>
+              <div><Label>Telefone</Label>
+                <Input value={form.phone} onChange={(e) => upd("phone", e.target.value)} /></div>
+              <div><Label>WhatsApp</Label>
+                <Input value={form.whatsapp} onChange={(e) => upd("whatsapp", e.target.value)} /></div>
+              <div><Label>E-mail</Label>
+                <Input value={form.email} onChange={(e) => upd("email", e.target.value)} /></div>
+              <div><Label>Nascimento</Label>
+                <Input value={form.birth_date} onChange={(e) => upd("birth_date", e.target.value)} placeholder="dd/mm/aaaa" /></div>
+              <div><Label>Sexo</Label>
+                <Select value={form.sexo} onValueChange={(v) => upd("sexo", v)}>
+                  <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Feminino">Feminino</SelectItem>
+                    <SelectItem value="Masculino">Masculino</SelectItem>
+                    <SelectItem value="Outro">Outro</SelectItem>
+                  </SelectContent>
+                </Select></div>
+              <div><Label>Estado civil</Label>
+                <Select value={form.estadoCivil} onValueChange={(v) => upd("estadoCivil", v)}>
+                  <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Solteiro(a)">Solteiro(a)</SelectItem>
+                    <SelectItem value="Casado(a)">Casado(a)</SelectItem>
+                    <SelectItem value="Divorciado(a)">Divorciado(a)</SelectItem>
+                    <SelectItem value="Viúvo(a)">Viúvo(a)</SelectItem>
+                    <SelectItem value="União estável">União estável</SelectItem>
+                  </SelectContent>
+                </Select></div>
+              <div><Label>Profissão</Label>
+                <Input value={form.profissao} onChange={(e) => upd("profissao", e.target.value)} /></div>
+              <div className="sm:col-span-2"><Label>Endereço</Label>
+                <Input value={form.endereco} onChange={(e) => upd("endereco", e.target.value)} /></div>
+              <div><Label>Contato emergência</Label>
+                <Input value={form.emerg} onChange={(e) => upd("emerg", e.target.value)} /></div>
+              <div><Label>Tel. emergência</Label>
+                <Input value={form.emergTel} onChange={(e) => upd("emergTel", e.target.value)} /></div>
+            </div>
+          </section>
+
+          <section className="space-y-3">
+            <h4 className="font-display text-sm uppercase tracking-widest text-gold">Anamnese</h4>
+            <div><Label>Queixa principal</Label>
+              <Textarea rows={2} value={form.queixa} onChange={(e) => upd("queixa", e.target.value)} /></div>
+            <div><Label>Observações de saúde</Label>
+              <Textarea rows={2} value={form.saudeExp} onChange={(e) => upd("saudeExp", e.target.value)} /></div>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div><Label>Medicamentos</Label>
+                <Input value={form.medQuais} onChange={(e) => upd("medQuais", e.target.value)} /></div>
+              <div><Label>Cirurgias</Label>
+                <Input value={form.cirurgiaQuais} onChange={(e) => upd("cirurgiaQuais", e.target.value)} /></div>
+            </div>
+          </section>
+
+          <section className="space-y-3">
+            <h4 className="font-display text-sm uppercase tracking-widest text-gold">Avaliação da terapeuta</h4>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div><Label>Status</Label>
+                <Select value={form.fitness_status} onValueChange={(v) => upd("fitness_status", v)}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="pendente">Pendente</SelectItem>
+                    <SelectItem value="apto">Apto para atendimento</SelectItem>
+                    <SelectItem value="requer_avaliacao">Requer avaliação médica</SelectItem>
+                  </SelectContent>
+                </Select></div>
+              <div><Label>Última sessão</Label>
+                <Input type="date" value={form.last_session} onChange={(e) => upd("last_session", e.target.value)} /></div>
+            </div>
+            <div><Label>Observações</Label>
+              <Textarea rows={4} value={form.therapist_notes} onChange={(e) => upd("therapist_notes", e.target.value)} /></div>
+          </section>
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>Cancelar</Button>

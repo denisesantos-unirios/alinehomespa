@@ -8,7 +8,6 @@ type Client = {
   phone: string | null;
   whatsapp: string | null;
   email: string | null;
-  cpf: string | null;
   birth_date: string | null;
   anamnesis: any;
   therapist_notes: string | null;
@@ -30,6 +29,21 @@ function val(v: any): string {
   }
   return String(v);
 }
+
+function computeAge(nascimento?: string | null): string {
+  if (!nascimento) return "";
+  const m = String(nascimento).match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+  if (!m) return "";
+  const [, d, mo, y] = m;
+  const birth = new Date(+y, +mo - 1, +d);
+  if (isNaN(birth.getTime())) return "";
+  const t = new Date();
+  let age = t.getFullYear() - birth.getFullYear();
+  const md = t.getMonth() - birth.getMonth();
+  if (md < 0 || (md === 0 && t.getDate() < birth.getDate())) age--;
+  return age >= 0 && age < 130 ? `${age} anos` : "";
+}
+
 
 export function exportAnamnesisPDF(client: Client) {
   const a = client.anamnesis ?? {};
@@ -92,10 +106,8 @@ export function exportAnamnesisPDF(client: Client) {
   table([
     ["Nome completo", val(client.full_name)],
     ["Data de nascimento", val(a.nascimento ?? client.birth_date)],
-    ["Idade", val(a.idade)],
+    ["Idade", val(a.idade) !== "—" ? val(a.idade) : (computeAge(a.nascimento ?? client.birth_date) || "—")],
     ["Sexo", val(a.sexo)],
-    ["CPF", val(client.cpf ?? a.cpf)],
-    ["RG", val(a.rg)],
     ["Telefone", val(client.phone)],
     ["WhatsApp", val(client.whatsapp)],
     ["E-mail", val(client.email)],

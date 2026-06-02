@@ -45,6 +45,7 @@ function AgendaPage() {
   const qc = useQueryClient();
   const [weekStart, setWeekStart] = useState(() => startOfWeek(new Date(), { weekStartsOn: 0 }));
   const [open, setOpen] = useState(false);
+  const [editing, setEditing] = useState<Appointment | null>(null);
 
   const weekEnd = useMemo(() => addDays(weekStart, 6), [weekStart]);
 
@@ -62,16 +63,16 @@ function AgendaPage() {
     },
   });
 
+  const { data: settings } = useQuery({
+    queryKey: ["admin", "settings"],
+    queryFn: async () => {
+      const { data } = await supabase.from("settings").select("availability, blocked_dates").eq("id", true).maybeSingle();
+      return data as { availability: Record<string, { enabled: boolean; start: string; end: string }>; blocked_dates: string[] } | null;
+    },
+  });
+
   const days = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
 
-  async function updateStatus(a: Appointment, status: Appointment["status"]) {
-    const { error } = await supabase.from("appointments").update({ status }).eq("id", a.id);
-    if (error) toast.error(error.message);
-    else {
-      toast.success("Status atualizado.");
-      qc.invalidateQueries({ queryKey: ["admin", "agenda"] });
-    }
-  }
 
   return (
     <div className="space-y-6">
@@ -115,10 +116,14 @@ function AgendaPage() {
               (a) => format(new Date(a.scheduled_at), "yyyy-MM-dd") === format(day, "yyyy-MM-dd"),
             );
             const isToday = format(day, "yyyy-MM-dd") === format(new Date(), "yyyy-MM-dd");
+            const dayKey = String(day.getDay());
+            const av = settings?.availability?.[dayKey];
+            const blocked = settings?.blocked_dates?.includes(format(day, "yyyy-MM-dd"));
+            const unavailable = blocked || (av && !av.enabled);
             return (
               <div
                 key={day.toISOString()}
-                className={`min-h-[180px] rounded-2xl border bg-card p-3 ${isToday ? "border-gold" : "border-border"}`}
+                className={`min-h-[180px] rounded-2xl border bg-card p-3 ${isToday ? "border-gold" : "border-border"} ${unavailable ? "opacity-60" : ""}`}
               >
                 <div className="mb-2 flex items-center justify-between">
                   <div>
@@ -129,6 +134,11 @@ function AgendaPage() {
                       {format(day, "dd")}
                     </p>
                   </div>
+                  {unavailable ? (
+                    <Badge variant="outline" className="text-[10px]">{blocked ? "Bloqueado" : "Fechado"}</Badge>
+                  ) : av ? (
+                    <span className="text-[10px] text-muted-foreground">{av.start}–{av.end}</span>
+                  ) : null}
                 </div>
                 <div className="space-y-2">
                   {dayAppts.length === 0 && (
@@ -137,15 +147,9 @@ function AgendaPage() {
                   {dayAppts.map((a) => (
                     <button
                       key={a.id}
-                      onClick={() => {
-                        const next =
-                          a.status === "agendado" ? "concluido"
-                          : a.status === "concluido" ? "cancelado"
-                          : "agendado";
-                        updateStatus(a, next);
-                      }}
+                      onClick={() => setEditing(a)}
                       className="w-full rounded-lg border border-border bg-background p-2 text-left text-xs transition hover:border-gold"
-                      title="Clique para alternar status"
+                      title="Clique para editar"
                     >
                       <div className="flex items-center justify-between">
                         <span className="font-medium text-primary">
@@ -166,6 +170,16 @@ function AgendaPage() {
           })}
         </div>
       )}
+
+      <EditAppointmentDialog
+        appt={editing}
+        onClose={() => setEditing(null)}
+        onSaved={() => {
+          setEditing(null);
+          qc.invalidateQueries({ queryKey: ["admin", "agenda"] });
+          qc.invalidateQueries({ queryKey: ["admin", "dashboard"] });
+        }}
+      />
     </div>
   );
 }
@@ -270,5 +284,121 @@ function NewAppointmentDialog({ onClose }: { onClose: () => void }) {
         </Button>
       </DialogFooter>
     </DialogContent>
+  );
+}
+
+function EditAppointmentDialog({
+  appt, onClose, onSaved,
+}: { appt: Appointment | null; onClose: () => void; onSaved: () => void }) {
+  const [clientName, setClientName] = useState("");
+  const [service, setService] = useState(SERVICES[0]);
+  const [date, setDate] = useState("");
+  const [time, setTime] = useState("");
+  const [location, setLocation] = useState("");
+  const [notes, setNotes] = useState("");
+  const [status, setStatus] = useState<Appointment["status"]>("agendado");
+  const [busy, setBusy] = useState(false);
+
+  useMemo(() => {
+    if (appt) {
+      const d = new Date(appt.scheduled_at);
+      setClientName(appt.client_name);
+      setService(appt.service_type);
+      setDate(format(d, "yyyy-MM-dd"));
+      setTime(format(d, "HH:mm"));
+      setLocation(appt.location ?? "");
+      setNotes(appt.notes ?? "");
+      setStatus(appt.status);
+    }
+  }, [appt]);
+
+  if (!appt) return null;
+
+  async function save() {
+    setBusy(true);
+    const { error } = await supabase.from("appointments").update({
+      client_name: clientName,
+      service_type: service,
+      scheduled_at: new Date(`${date}T${time}`).toISOString(),
+      location: location || null,
+      notes: notes || null,
+      status,
+    }).eq("id", appt!.id);
+    setBusy(false);
+    if (error) return toast.error(error.message);
+    toast.success("Atendimento atualizado.");
+    onSaved();
+  }
+
+  async function remove() {
+    if (!confirm("Excluir este atendimento?")) return;
+    const { error } = await supabase.from("appointments").delete().eq("id", appt!.id);
+    if (error) return toast.error(error.message);
+    toast.success("Atendimento excluído.");
+    onSaved();
+  }
+
+  return (
+    <Dialog open={!!appt} onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="sm:max-w-lg">
+        <DialogHeader>
+          <DialogTitle>Editar atendimento</DialogTitle>
+          <DialogDescription>Atualize os dados ou cancele este atendimento.</DialogDescription>
+        </DialogHeader>
+        <div className="space-y-4">
+          <div>
+            <Label>Cliente</Label>
+            <Input value={clientName} onChange={(e) => setClientName(e.target.value)} />
+          </div>
+          <div>
+            <Label>Tipo de serviço</Label>
+            <Select value={service} onValueChange={setService}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {SERVICES.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label>Data</Label>
+              <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+            </div>
+            <div>
+              <Label>Horário</Label>
+              <Input type="time" value={time} onChange={(e) => setTime(e.target.value)} />
+            </div>
+          </div>
+          <div>
+            <Label>Status</Label>
+            <Select value={status} onValueChange={(v) => setStatus(v as Appointment["status"])}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="agendado">Agendado</SelectItem>
+                <SelectItem value="concluido">Concluído</SelectItem>
+                <SelectItem value="cancelado">Cancelado</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <Label>Local (endereço)</Label>
+            <Input value={location} onChange={(e) => setLocation(e.target.value)} />
+          </div>
+          <div>
+            <Label>Observações</Label>
+            <Textarea rows={3} value={notes} onChange={(e) => setNotes(e.target.value)} />
+          </div>
+        </div>
+        <DialogFooter className="flex-wrap gap-2 sm:justify-between">
+          <Button variant="destructive" onClick={remove}>Excluir</Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={onClose}>Cancelar</Button>
+            <Button onClick={save} disabled={busy} className="bg-gold text-gold-foreground hover:bg-gold/90">
+              {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "Salvar"}
+            </Button>
+          </div>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }

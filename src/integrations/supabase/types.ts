@@ -112,6 +112,45 @@ export type Database = {
         }
         Relationships: []
       }
+      settings: {
+        Row: {
+          availability: Json
+          blocked_dates: string[]
+          clinic_name: string
+          confirmation_message: string
+          email: string | null
+          id: boolean
+          instagram: string | null
+          phone: string | null
+          updated_at: string
+          whatsapp: string | null
+        }
+        Insert: {
+          availability?: Json
+          blocked_dates?: string[]
+          clinic_name?: string
+          confirmation_message?: string
+          email?: string | null
+          id?: boolean
+          instagram?: string | null
+          phone?: string | null
+          updated_at?: string
+          whatsapp?: string | null
+        }
+        Update: {
+          availability?: Json
+          blocked_dates?: string[]
+          clinic_name?: string
+          confirmation_message?: string
+          email?: string | null
+          id?: boolean
+          instagram?: string | null
+          phone?: string | null
+          updated_at?: string
+          whatsapp?: string | null
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
