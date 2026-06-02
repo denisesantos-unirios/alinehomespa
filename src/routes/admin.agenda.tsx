@@ -124,10 +124,14 @@ function AgendaPage() {
               (a) => format(new Date(a.scheduled_at), "yyyy-MM-dd") === format(day, "yyyy-MM-dd"),
             );
             const isToday = format(day, "yyyy-MM-dd") === format(new Date(), "yyyy-MM-dd");
+            const dayKey = String(day.getDay());
+            const av = settings?.availability?.[dayKey];
+            const blocked = settings?.blocked_dates?.includes(format(day, "yyyy-MM-dd"));
+            const unavailable = blocked || (av && !av.enabled);
             return (
               <div
                 key={day.toISOString()}
-                className={`min-h-[180px] rounded-2xl border bg-card p-3 ${isToday ? "border-gold" : "border-border"}`}
+                className={`min-h-[180px] rounded-2xl border bg-card p-3 ${isToday ? "border-gold" : "border-border"} ${unavailable ? "opacity-60" : ""}`}
               >
                 <div className="mb-2 flex items-center justify-between">
                   <div>
@@ -138,6 +142,11 @@ function AgendaPage() {
                       {format(day, "dd")}
                     </p>
                   </div>
+                  {unavailable ? (
+                    <Badge variant="outline" className="text-[10px]">{blocked ? "Bloqueado" : "Fechado"}</Badge>
+                  ) : av ? (
+                    <span className="text-[10px] text-muted-foreground">{av.start}–{av.end}</span>
+                  ) : null}
                 </div>
                 <div className="space-y-2">
                   {dayAppts.length === 0 && (
@@ -146,15 +155,9 @@ function AgendaPage() {
                   {dayAppts.map((a) => (
                     <button
                       key={a.id}
-                      onClick={() => {
-                        const next =
-                          a.status === "agendado" ? "concluido"
-                          : a.status === "concluido" ? "cancelado"
-                          : "agendado";
-                        updateStatus(a, next);
-                      }}
+                      onClick={() => setEditing(a)}
                       className="w-full rounded-lg border border-border bg-background p-2 text-left text-xs transition hover:border-gold"
-                      title="Clique para alternar status"
+                      title="Clique para editar"
                     >
                       <div className="flex items-center justify-between">
                         <span className="font-medium text-primary">
@@ -175,6 +178,16 @@ function AgendaPage() {
           })}
         </div>
       )}
+
+      <EditAppointmentDialog
+        appt={editing}
+        onClose={() => setEditing(null)}
+        onSaved={() => {
+          setEditing(null);
+          qc.invalidateQueries({ queryKey: ["admin", "agenda"] });
+          qc.invalidateQueries({ queryKey: ["admin", "dashboard"] });
+        }}
+      />
     </div>
   );
 }
