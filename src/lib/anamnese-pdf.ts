@@ -30,6 +30,19 @@ function val(v: any): string {
   return String(v);
 }
 
+function computeAge(nascimento?: string | null): string {
+  if (!nascimento) return "";
+  const m = String(nascimento).match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+  if (!m) return "";
+  const [, d, mo, y] = m;
+  const birth = new Date(+y, +mo - 1, +d);
+  if (isNaN(birth.getTime())) return "";
+  const t = new Date();
+  let age = t.getFullYear() - birth.getFullYear();
+  const md = t.getMonth() - birth.getMonth();
+  if (md < 0 || (md === 0 && t.getDate() < birth.getDate())) age--;
+  return age >= 0 && age < 130 ? `${age} anos` : "";
+
 export function exportAnamnesisPDF(client: Client) {
   const a = client.anamnesis ?? {};
   const doc = new jsPDF({ unit: "pt", format: "a4" });
