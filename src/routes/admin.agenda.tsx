@@ -286,3 +286,119 @@ function NewAppointmentDialog({ onClose }: { onClose: () => void }) {
     </DialogContent>
   );
 }
+
+function EditAppointmentDialog({
+  appt, onClose, onSaved,
+}: { appt: Appointment | null; onClose: () => void; onSaved: () => void }) {
+  const [clientName, setClientName] = useState("");
+  const [service, setService] = useState(SERVICES[0]);
+  const [date, setDate] = useState("");
+  const [time, setTime] = useState("");
+  const [location, setLocation] = useState("");
+  const [notes, setNotes] = useState("");
+  const [status, setStatus] = useState<Appointment["status"]>("agendado");
+  const [busy, setBusy] = useState(false);
+
+  useMemo(() => {
+    if (appt) {
+      const d = new Date(appt.scheduled_at);
+      setClientName(appt.client_name);
+      setService(appt.service_type);
+      setDate(format(d, "yyyy-MM-dd"));
+      setTime(format(d, "HH:mm"));
+      setLocation(appt.location ?? "");
+      setNotes(appt.notes ?? "");
+      setStatus(appt.status);
+    }
+  }, [appt]);
+
+  if (!appt) return null;
+
+  async function save() {
+    setBusy(true);
+    const { error } = await supabase.from("appointments").update({
+      client_name: clientName,
+      service_type: service,
+      scheduled_at: new Date(`${date}T${time}`).toISOString(),
+      location: location || null,
+      notes: notes || null,
+      status,
+    }).eq("id", appt!.id);
+    setBusy(false);
+    if (error) return toast.error(error.message);
+    toast.success("Atendimento atualizado.");
+    onSaved();
+  }
+
+  async function remove() {
+    if (!confirm("Excluir este atendimento?")) return;
+    const { error } = await supabase.from("appointments").delete().eq("id", appt!.id);
+    if (error) return toast.error(error.message);
+    toast.success("Atendimento excluído.");
+    onSaved();
+  }
+
+  return (
+    <Dialog open={!!appt} onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="sm:max-w-lg">
+        <DialogHeader>
+          <DialogTitle>Editar atendimento</DialogTitle>
+          <DialogDescription>Atualize os dados ou cancele este atendimento.</DialogDescription>
+        </DialogHeader>
+        <div className="space-y-4">
+          <div>
+            <Label>Cliente</Label>
+            <Input value={clientName} onChange={(e) => setClientName(e.target.value)} />
+          </div>
+          <div>
+            <Label>Tipo de serviço</Label>
+            <Select value={service} onValueChange={setService}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {SERVICES.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label>Data</Label>
+              <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+            </div>
+            <div>
+              <Label>Horário</Label>
+              <Input type="time" value={time} onChange={(e) => setTime(e.target.value)} />
+            </div>
+          </div>
+          <div>
+            <Label>Status</Label>
+            <Select value={status} onValueChange={(v) => setStatus(v as Appointment["status"])}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="agendado">Agendado</SelectItem>
+                <SelectItem value="concluido">Concluído</SelectItem>
+                <SelectItem value="cancelado">Cancelado</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <Label>Local (endereço)</Label>
+            <Input value={location} onChange={(e) => setLocation(e.target.value)} />
+          </div>
+          <div>
+            <Label>Observações</Label>
+            <Textarea rows={3} value={notes} onChange={(e) => setNotes(e.target.value)} />
+          </div>
+        </div>
+        <DialogFooter className="flex-wrap gap-2 sm:justify-between">
+          <Button variant="destructive" onClick={remove}>Excluir</Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={onClose}>Cancelar</Button>
+            <Button onClick={save} disabled={busy} className="bg-gold text-gold-foreground hover:bg-gold/90">
+              {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "Salvar"}
+            </Button>
+          </div>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
