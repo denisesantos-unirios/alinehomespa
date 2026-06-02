@@ -73,14 +73,6 @@ function AgendaPage() {
 
   const days = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
 
-  async function updateStatus(a: Appointment, status: Appointment["status"]) {
-    const { error } = await supabase.from("appointments").update({ status }).eq("id", a.id);
-    if (error) toast.error(error.message);
-    else {
-      toast.success("Status atualizado.");
-      qc.invalidateQueries({ queryKey: ["admin", "agenda"] });
-    }
-  }
 
   return (
     <div className="space-y-6">
