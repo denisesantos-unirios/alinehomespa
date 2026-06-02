@@ -45,6 +45,7 @@ function AgendaPage() {
   const qc = useQueryClient();
   const [weekStart, setWeekStart] = useState(() => startOfWeek(new Date(), { weekStartsOn: 0 }));
   const [open, setOpen] = useState(false);
+  const [editing, setEditing] = useState<Appointment | null>(null);
 
   const weekEnd = useMemo(() => addDays(weekStart, 6), [weekStart]);
 
@@ -59,6 +60,14 @@ function AgendaPage() {
         .order("scheduled_at");
       if (error) throw error;
       return data as Appointment[];
+    },
+  });
+
+  const { data: settings } = useQuery({
+    queryKey: ["admin", "settings"],
+    queryFn: async () => {
+      const { data } = await supabase.from("settings").select("availability, blocked_dates").eq("id", true).maybeSingle();
+      return data as { availability: Record<string, { enabled: boolean; start: string; end: string }>; blocked_dates: string[] } | null;
     },
   });
 
