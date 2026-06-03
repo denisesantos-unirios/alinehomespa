@@ -23,11 +23,38 @@ const items: { to: string; label: string; icon: typeof LayoutDashboard; exact?: 
   { to: "/admin/configuracoes", label: "Configurações", icon: Settings },
 ];
 
+function NavLinks({ onClick }: { onClick?: () => void }) {
+  const path = useRouterState({ select: (s) => s.location.pathname });
+  return (
+    <>
+      {items.map((it) => {
+        const active = it.exact ? path === it.to : path.startsWith(it.to);
+        return (
+          <Link
+            key={it.to}
+            to={it.to as never}
+            onClick={onClick}
+            className={cn(
+              "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition",
+              active
+                ? "bg-sidebar-accent text-gold"
+                : "text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-foreground",
+            )}
+          >
+            <it.icon className="h-4 w-4" /> {it.label}
+          </Link>
+        );
+      })}
+    </>
+  );
+}
+
 function AdminLayout() {
   const path = useRouterState({ select: (s) => s.location.pathname });
   const [session, setSession] = useState<Session | null>(null);
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
   const [loading, setLoading] = useState(true);
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, s) => {
