@@ -5,7 +5,8 @@ import { Logo } from "@/components/brand/Logo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { LayoutDashboard, Users, CalendarDays, Settings, LogOut, Loader2 } from "lucide-react";
+import { LayoutDashboard, Users, CalendarDays, Settings, LogOut, Loader2, Menu, X } from "lucide-react";
+import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -22,11 +23,38 @@ const items: { to: string; label: string; icon: typeof LayoutDashboard; exact?: 
   { to: "/admin/configuracoes", label: "Configurações", icon: Settings },
 ];
 
+function NavLinks({ onClick }: { onClick?: () => void }) {
+  const path = useRouterState({ select: (s) => s.location.pathname });
+  return (
+    <>
+      {items.map((it) => {
+        const active = it.exact ? path === it.to : path.startsWith(it.to);
+        return (
+          <Link
+            key={it.to}
+            to={it.to as never}
+            onClick={onClick}
+            className={cn(
+              "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition",
+              active
+                ? "bg-sidebar-accent text-gold"
+                : "text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-foreground",
+            )}
+          >
+            <it.icon className="h-4 w-4" /> {it.label}
+          </Link>
+        );
+      })}
+    </>
+  );
+}
+
 function AdminLayout() {
   const path = useRouterState({ select: (s) => s.location.pathname });
   const [session, setSession] = useState<Session | null>(null);
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
   const [loading, setLoading] = useState(true);
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, s) => {
@@ -93,29 +121,14 @@ function AdminLayout() {
 
   return (
     <div className="flex min-h-screen bg-background">
+      {/* Desktop sidebar */}
       <aside className="hidden w-64 shrink-0 flex-col bg-sidebar text-sidebar-foreground md:flex">
         <div className="border-b border-sidebar-border p-5">
           <Logo size="sm" />
           <p className="mt-2 text-xs text-sidebar-foreground/60 truncate">{session.user.email}</p>
         </div>
         <nav className="flex-1 space-y-1 p-3">
-          {items.map((it) => {
-            const active = it.exact ? path === it.to : path.startsWith(it.to);
-            return (
-              <Link
-                key={it.to}
-                to={it.to as never}
-                className={cn(
-                  "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition",
-                  active
-                    ? "bg-sidebar-accent text-gold"
-                    : "text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-foreground",
-                )}
-              >
-                <it.icon className="h-4 w-4" /> {it.label}
-              </Link>
-            );
-          })}
+          <NavLinks />
         </nav>
         <div className="border-t border-sidebar-border p-3">
           <button
@@ -126,16 +139,55 @@ function AdminLayout() {
           </button>
         </div>
       </aside>
+
       <div className="flex-1">
+        {/* Header com menu mobile */}
         <header className="border-b bg-card">
-          <div className="flex h-16 items-center justify-between px-6">
-            <h2 className="font-display text-xl text-primary">Painel Administrativo</h2>
+          <div className="flex h-16 items-center justify-between px-4 md:px-6">
+            <div className="flex items-center gap-3">
+              {/* Mobile hamburger */}
+              <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
+                <SheetTrigger asChild>
+                  <button
+                    type="button"
+                    aria-label="Abrir menu"
+                    className="inline-flex items-center justify-center rounded-md p-2 text-muted-foreground hover:bg-accent hover:text-foreground md:hidden"
+                  >
+                    <Menu className="h-5 w-5" />
+                  </button>
+                </SheetTrigger>
+                <SheetContent side="left" className="w-[260px] bg-sidebar p-0">
+                  <SheetTitle className="sr-only">Menu administrativo</SheetTitle>
+                  <div className="flex h-full flex-col">
+                    <div className="border-b border-sidebar-border p-5">
+                      <Logo size="sm" />
+                      <p className="mt-2 text-xs text-sidebar-foreground/60 truncate">{session.user.email}</p>
+                    </div>
+                    <nav className="flex-1 space-y-1 p-3">
+                      <NavLinks onClick={() => setMobileOpen(false)} />
+                    </nav>
+                    <div className="border-t border-sidebar-border p-3">
+                      <button
+                        onClick={() => {
+                          setMobileOpen(false);
+                          supabase.auth.signOut();
+                        }}
+                        className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-sidebar-foreground/80 hover:bg-sidebar-accent"
+                      >
+                        <LogOut className="h-4 w-4" /> Sair
+                      </button>
+                    </div>
+                  </div>
+                </SheetContent>
+              </Sheet>
+              <h2 className="font-display text-xl text-primary">Painel Administrativo</h2>
+            </div>
             <Link to="/" className="text-sm text-muted-foreground hover:text-primary">
               Ver site
             </Link>
           </div>
         </header>
-        <div className="p-6">
+        <div className="p-4 md:p-6">
           <Outlet />
         </div>
       </div>
